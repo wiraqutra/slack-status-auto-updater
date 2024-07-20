@@ -1,0 +1,23 @@
+# .gitignore for Google Apps Script projects
+
+# Ignore Mac system files
+.DS_store
+
+# Ignore node_modules folder
+node_modules
+
+# Ignore all text files
+*.txt
+
+# Ignore files related to API keys
+.env
+
+# Ignore SASS config files
+.sass-cache
+
+# Ignore Google Apps Script local development files
+.clasp.json
+.clasprc.json
+
+# Ignore any log files
+*.log

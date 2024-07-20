@@ -59,7 +59,7 @@ Locate the following line:
 const formattedDate = Utilities.formatDate(date, 'America/San_Francisco', 'MM-dd');
 ```
 
-Replace 'America/Los_Angeles' with your desired time zone. For example:
+Replace 'America/San_Francisco' with your desired time zone. For example:
 
 - For London: 'Europe/London'
 - For Bangalore: 'Asia/Kolkata'

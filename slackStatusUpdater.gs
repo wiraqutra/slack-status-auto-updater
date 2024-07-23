@@ -1,33 +1,72 @@
 // Constants
 const CONSTANTS = {
   VACATION_PERIODS: {
+    NEW_YEARS: { start: '01-01', end: '01-01', name: "New Year's Day", emoji: '🎉' },
+    MARTIN_LUTHER_KING: { start: '01-17', end: '01-17', name: "Martin Luther King Jr. Day", emoji: '✊🏾' },
+    PRESIDENTS_DAY: { start: '02-21', end: '02-21', name: "Presidents' Day", emoji: '🇺🇸' },
+    MEMORIAL_DAY: { start: '05-30', end: '05-30', name: "Memorial Day", emoji: '🎖️' },
     INDEPENDENCE_DAY: { start: '07-04', end: '07-04', name: 'Independence Day', emoji: '🇺🇸' },
+    LABOR_DAY: { start: '09-05', end: '09-05', name: "Labor Day", emoji: '👷' },
+    INDIGENOUS_PEOPLES_DAY: { start: '10-10', end: '10-10', name: "Indigenous Peoples' Day", emoji: '🦅' },
+    VETERANS_DAY: { start: '11-11', end: '11-11', name: "Veterans Day", emoji: '🎖️' },
     THANKSGIVING: { start: '11-24', end: '11-25', name: 'Thanksgiving', emoji: '🦃' },
     CHRISTMAS: { start: '12-24', end: '12-26', name: 'Christmas', emoji: '🎄' },
   },
   WORK_HOURS: {
     START: 9,
-    END: 17,
+    END: 18,
     LUNCH_START: 12,
     LUNCH_END: 13,
     BREAK_START: 15,
-    BREAK_END: 15.25,   // 15:15
+    BREAK_END: 15.25,  // 15 minutes break
   },
   STATUSES: {
-    DEFAULT: { text: '', emoji: '' },
-    HOLIDAY: { text: 'Out of Office', emoji: '🏖️' },
-    LUNCH: { text: 'Lunch Break', emoji: '🍽️' },
-    BREAK: { text: 'Short Break', emoji: '☕' },
+    DEFAULT: { presence: 'auto', text: '', emoji: '' },
+    HOLIDAY: { presence: 'away', text: 'Out of Office', emojiType: 'HOLIDAY' },
+    LUNCH: { presence: 'away', text: 'Lunch Break', emojiType: 'LUNCH' },
+    BREAK: { presence: 'auto', text: 'Short Break', emojiType: 'BREAK' },
   },
   CALENDAR_ID: 'en.usa#holiday@group.v.calendar.google.com',
+  EMOJIS: {
+    HOLIDAY: ['🌴', '🏔️', '🏖️', '📖', '🎮'],
+    LUNCH: ['🍱', '🍛', '🍜', '🍝', '🍣', '🍙', '🍔', '🥪', '🥗', '🍕'],
+    BREAK: ['☕', '🍵', '🥤', '🍡', '🍩'],
+  },
 };
+
+function getRandomEmoji(type) {
+  const emojis = CONSTANTS.EMOJIS[type];
+  return emojis[Math.floor(Math.random() * emojis.length)];
+}
+
+function getTodayEmoji(type) {
+  const today = new Date().toDateString();
+  const storedEmoji = PropertiesService.getScriptProperties().getProperty(`TODAY_${type}_EMOJI`);
+  const storedDate = PropertiesService.getScriptProperties().getProperty(`${type}_EMOJI_DATE`);
+
+  if (storedEmoji && storedDate === today) {
+    return storedEmoji;
+  } else {
+    const newEmoji = getRandomEmoji(type);
+    PropertiesService.getScriptProperties().setProperty(`TODAY_${type}_EMOJI`, newEmoji);
+    PropertiesService.getScriptProperties().setProperty(`${type}_EMOJI_DATE`, today);
+    return newEmoji;
+  }
+}
 
 function updateUserStatus() {
   const userToken = PropertiesService.getScriptProperties().getProperty('USER_TOKEN');
   const now = new Date();
-  const status = determineStatus(now);
+  const currentStatus = determineStatus(now);
+  const previousStatus = getPreviousStatus();
 
-  updateSlackStatus(userToken, status.presence, status.text, status.emoji);
+  if (isStatusDifferent(currentStatus, previousStatus)) {
+    updateSlackStatus(userToken, currentStatus);
+    savePreviousStatus(currentStatus);
+    Logger.log(`Status updated successfully to: ${currentStatus.text} ${currentStatus.emoji}`);
+  } else {
+    Logger.log('No need to update: Same as last time');
+  }
 }
 
 function determineStatus(date) {
@@ -37,7 +76,8 @@ function determineStatus(date) {
   }
 
   if (isHoliday(date) || isWeekend(date)) {
-    return { presence: 'away', ...CONSTANTS.STATUSES.HOLIDAY };
+    const { presence, text, emojiType } = CONSTANTS.STATUSES.HOLIDAY;
+    return { presence, text, emoji: getTodayEmoji(emojiType) };
   }
 
   return getWorkdayStatus(date);
@@ -58,18 +98,20 @@ function getWorkdayStatus(date) {
   const { WORK_HOURS, STATUSES } = CONSTANTS;
 
   if (hours < WORK_HOURS.START || hours >= WORK_HOURS.END) {
-    return { presence: 'away', ...STATUSES.DEFAULT };
+    return STATUSES.DEFAULT;
   }
 
   if (hours >= WORK_HOURS.LUNCH_START && hours < WORK_HOURS.LUNCH_END) {
-    return { presence: 'away', ...STATUSES.LUNCH };
+    const { presence, text, emojiType } = STATUSES.LUNCH;
+    return { presence, text, emoji: getTodayEmoji(emojiType) };
   }
 
   if (hours >= WORK_HOURS.BREAK_START && hours < WORK_HOURS.BREAK_END) {
-    return { presence: 'away', ...STATUSES.BREAK };
+    const { presence, text, emojiType } = STATUSES.BREAK;
+    return { presence, text, emoji: getTodayEmoji(emojiType) };
   }
 
-  return { presence: 'auto', ...STATUSES.DEFAULT };
+  return STATUSES.DEFAULT;
 }
 
 function checkVacationPeriod(date) {
@@ -88,7 +130,8 @@ function isDateInRange(date, start, end) {
   }
 }
 
-function updateSlackStatus(token, presence, status_text, status_emoji) {
+function updateSlackStatus(token, status) {
+  const { presence, text, emoji } = status;
   const presenceUrl = 'https://slack.com/api/users.setPresence';
   const statusUrl = 'https://slack.com/api/users.profile.set';
   const options = {
@@ -101,8 +144,8 @@ function updateSlackStatus(token, presence, status_text, status_emoji) {
 
   try {
     updatePresence(presenceUrl, options, presence);
-    updateStatus(statusUrl, options, status_text, status_emoji);
-    Logger.log('Status updated successfully to: ' + status_text + ' ' + status_emoji);
+    updateStatus(statusUrl, options, text, emoji);
+    Logger.log(`Status updated successfully to: ${text} ${emoji}`);
   } catch (error) {
     Logger.log('Error occurred: ' + error.message);
   }
@@ -126,4 +169,20 @@ function updateStatus(url, options, status_text, status_emoji) {
   if (!result.ok) {
     throw new Error('Slack Status API error: ' + JSON.stringify(result));
   }
+}
+
+function getPreviousStatus() {
+  const storedStatus = PropertiesService.getScriptProperties().getProperty('PREVIOUS_STATUS');
+  return storedStatus ? JSON.parse(storedStatus) : null;
+}
+
+function savePreviousStatus(status) {
+  PropertiesService.getScriptProperties().setProperty('PREVIOUS_STATUS', JSON.stringify(status));
+}
+
+function isStatusDifferent(status1, status2) {
+  if (!status2) return true;  // Always updated on the first run
+  return status1.presence !== status2.presence ||
+         status1.text !== status2.text ||
+         status1.emoji !== status2.emoji;
 }

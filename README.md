@@ -6,9 +6,9 @@ Automatically update your Slack status based on your work schedule, breaks, and 
 
 ## Features
 
-- Automatically sets your Slack status to "Active" during work hours
-- Updates status for lunch breaks and short breaks
-- Sets status to "Away" outside of work hours and on weekends
+- Automatically sets your Slack status to "Active" during work hours and "Away" outside work hours
+- Updates status for lunch breaks and short breaks with random emojis that change daily
+- Sets status to "Away" on weekends and holidays
 - Recognizes holidays and special vacation periods (e.g., Independence Day, Thanksgiving, Christmas)
 - Easily customizable for different work schedules and company-specific holidays
 
@@ -42,11 +42,10 @@ This script can be easily customized to fit your specific location, work schedul
 
 ```javascript
 VACATION_PERIODS: {
-  NEW_YEAR: { start: '01-01', end: '01-01', name: 'New Year\'s Day', emoji: '🎉' },
-  INDEPENDENCE_DAY: { start: '07-04', end: '07-04', name: 'Independence Day', emoji: '🇺🇸' },
-  THANKSGIVING: { start: '11-24', end: '11-25', name: 'Thanksgiving', emoji: '🦃' },
-  CHRISTMAS: { start: '12-24', end: '12-26', name: 'Christmas', emoji: '🎄' },
-  // Add your custom holidays here
+    NEW_YEARS: { start: '01-01', end: '01-01', name: "New Year's Day", emoji: '🎉' },
+    MARTIN_LUTHER_KING: { start: '01-17', end: '01-17', name: "Martin Luther King Jr. Day", emoji: '✊🏾' },
+    PRESIDENTS_DAY: { start: '02-21', end: '02-21', name: "Presidents' Day", emoji: '🇺🇸' },
+    ...
 },
 ```
 
@@ -85,15 +84,20 @@ WORK_HOURS: {
 
 ### Customizing Status Messages and Emojis
 
-In the `CONSTANTS` object, locate the `STATUSES` section.
+In the CONSTANTS object, locate the STATUSES and EMOJIS sections.
 Modify the text and emojis to your preference:
 
 ```javascript
 STATUSES: {
-  DEFAULT: { text: '', emoji: '' },
-  HOLIDAY: { text: 'Out of Office', emoji: '🏖️' },
-  LUNCH: { text: 'Lunch Break', emoji: '🍽️' },
-  BREAK: { text: 'Short Break', emoji: '☕' },
+  DEFAULT: { presence: 'auto', text: '', emoji: '' },
+  HOLIDAY: { presence: 'away', text: 'Holiday', emojiType: 'HOLIDAY' },
+  LUNCH: { presence: 'away', text: 'Lunch Break', emojiType: 'LUNCH' },
+  BREAK: { presence: 'auto', text: 'Short Break', emojiType: 'BREAK' },
+},
+EMOJIS: {
+  HOLIDAY: ['🌴', '🏔️', '🏖️', '📖', '🎮'],
+  LUNCH: ['🍱', '🍛', '🍜', '🍝', '🍣', '🍙', '🍔', '🥪', '🥗', '🍕'],
+  BREAK: ['☕', '🍵', '🥤', '🍡', '🍩'],
 },
 ```
 

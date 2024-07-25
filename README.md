@@ -90,6 +90,7 @@ Modify the text and emojis to your preference:
 ```javascript
 STATUSES: {
   DEFAULT: { presence: 'auto', text: '', emoji: '' },
+  OUTSIDE_WORK: { presence: 'away', text: '', emoji: '' },
   HOLIDAY: { presence: 'away', text: 'Holiday', emojiType: 'HOLIDAY' },
   LUNCH: { presence: 'away', text: 'Lunch Break', emojiType: 'LUNCH' },
   BREAK: { presence: 'auto', text: 'Short Break', emojiType: 'BREAK' },

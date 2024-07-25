@@ -22,6 +22,7 @@ const CONSTANTS = {
   },
   STATUSES: {
     DEFAULT: { presence: 'auto', text: '', emoji: '' },
+    OUTSIDE_WORK: { presence: 'away', text: '', emoji: '' },
     HOLIDAY: { presence: 'away', text: 'Out of Office', emojiType: 'HOLIDAY' },
     LUNCH: { presence: 'away', text: 'Lunch Break', emojiType: 'LUNCH' },
     BREAK: { presence: 'auto', text: 'Short Break', emojiType: 'BREAK' },
@@ -98,7 +99,7 @@ function getWorkdayStatus(date) {
   const { WORK_HOURS, STATUSES } = CONSTANTS;
 
   if (hours < WORK_HOURS.START || hours >= WORK_HOURS.END) {
-    return STATUSES.DEFAULT;
+    return STATUSES.OUTSIDE_WORK;
   }
 
   if (hours >= WORK_HOURS.LUNCH_START && hours < WORK_HOURS.LUNCH_END) {

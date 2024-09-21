@@ -140,7 +140,8 @@ function updateSlackStatus(token, status) {
     'headers': { 
       'Authorization': 'Bearer ' + token,
       'Content-Type': 'application/json; charset=UTF-8'
-    }
+    },
+    'timeout': 30,  // Set 30-second timeout
   };
 
   try {
@@ -154,10 +155,15 @@ function updateSlackStatus(token, status) {
 
 function updatePresence(url, options, presence) {
   options.payload = JSON.stringify({ 'presence': presence });
-  const response = UrlFetchApp.fetch(url, options);
-  const result = JSON.parse(response.getContentText());
-  if (!result.ok) {
-    throw new Error('Slack Presence API error: ' + JSON.stringify(result));
+  try {
+    const response = UrlFetchApp.fetch(url, options);
+    const result = JSON.parse(response.getContentText());
+    if (!result.ok) {
+      throw new Error('Slack Presence API error: ' + JSON.stringify(result));
+    }
+  } catch (error) {
+    Logger.log('Error in updatePresence: ' + error.message);
+    throw error;
   }
 }
 
@@ -165,10 +171,15 @@ function updateStatus(url, options, status_text, status_emoji) {
   options.payload = JSON.stringify({
     'profile': { status_text, status_emoji }
   });
-  const response = UrlFetchApp.fetch(url, options);
-  const result = JSON.parse(response.getContentText());
-  if (!result.ok) {
-    throw new Error('Slack Status API error: ' + JSON.stringify(result));
+  try {
+    const response = UrlFetchApp.fetch(url, options);
+    const result = JSON.parse(response.getContentText());
+    if (!result.ok) {
+      throw new Error('Slack Status API error: ' + JSON.stringify(result));
+    }
+  } catch (error) {
+    Logger.log('Error in updateStatus: ' + error.message);
+    throw error;
   }
 }
 

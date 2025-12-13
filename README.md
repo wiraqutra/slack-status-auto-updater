@@ -8,8 +8,9 @@ Automatically update your Slack status based on your work schedule, breaks, and 
 
 - Automatically sets your Slack status to "Active" during work hours and "Away" outside work hours
 - Updates status for lunch breaks and short breaks with random emojis that change daily
-- Sets status to "Away" on weekends and holidays
-- Recognizes holidays and special vacation periods (e.g., Independence Day, Thanksgiving, Christmas)
+- Sets status to "Away" on weekends
+- Recognizes holidays via a Google Calendar (the calendar must be added/subscribed to the executing account)
+- Recognizes special vacation periods (e.g., Independence Day, Thanksgiving, Christmas)
 - Easily customizable for different work schedules and company-specific holidays
 
 ## Prerequisites
@@ -30,6 +31,28 @@ Automatically update your Slack status based on your work schedule, breaks, and 
 4. In the Google Apps Script project, go to Project Settings > Script Properties
 5. Add a new property named `USER_TOKEN` and paste your Slack API token as the value
 
+### Holiday Calendar ID (Optional but recommended)
+
+This script can detect holidays using a Google Calendar.
+
+**Important:** `CalendarApp.getCalendarById()` can return `null` if the calendar is not owned/subscribed by the executing Google account (or if your Google Workspace restricts external calendars). In that case, the script cannot read events from that calendar.
+
+1. In Google Calendar, add/subscribe to the holiday calendar you want to use (e.g., "Holidays in United States").
+2. Open Google Calendar → Settings → Settings for my calendars → (your holiday calendar) → **Integrate calendar**
+3. Copy the **Calendar ID** shown there and set it as `CONSTANTS.CALENDAR_ID`.
+
+Debug tip: list all accessible calendars and IDs:
+
+```javascript
+function debugCalendars() {
+  CalendarApp.getAllCalendars().forEach(c =>
+    console.log(`${c.getName()} => ${c.getId()}`)
+  );
+}
+```
+
+**Note on** `%23` **vs** `#`: URL-encoding like `%23` is for Calendar API URLs/ICS links. `CalendarApp.getCalendarById()` expects the raw ID with `#`.
+
 ## Customizing Holidays and Time Zones
 
 This script can be easily customized to fit your specific location, work schedule, and holidays. Here's how you can modify these settings:
@@ -48,6 +71,7 @@ VACATION_PERIODS: {
     ...
 },
 ```
+> Note: Holiday detection via Google Calendar depends on which calendars are visible to the executing account. If `getCalendarById()` returns `null`, first subscribe to the target holiday calendar and confirm its ID via `debugCalendars()` above.
 
 ### Changing the Time Zone
 
